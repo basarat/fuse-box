@@ -5,6 +5,8 @@ import { ensureUserPath } from "../Utils";
 import { HTTPServer } from "./HTTPServer";
 import { FuseBox } from "../FuseBox";
 import { utils } from "realm-utils";
+import { Config } from '../Config';
+import { WorkFlowContext, Plugin } from '../WorkflowContext';
 import * as process from "process";
 const watch = require("watch");
 
@@ -26,6 +28,12 @@ export interface ServerOptions {
      * - It can be an absolute path or relative to `appRootPath`
      **/
     root?: boolean | string;
+
+    /**
+     * Additional bundles you want included to customize the server behavior
+     * eg. using Loader API
+     */
+    serverBundle?: string;
 
     emitter?: HotReloadEmitter;
     httpServer?: boolean;
@@ -54,6 +62,24 @@ export class Server {
         const root: string | boolean = opts.root !== undefined
             ? (utils.isString(opts.root) ? ensureUserPath(opts.root as string) : false) : rootDir;
         const port = opts.port || 4444;
+
+        /** 
+         * If a server bundle is specified bundle that as well
+         */
+        if (opts.serverBundle) {
+            const serverBundleFileName = 'fuse-box-server-bundle.js';
+            this.fuse.bundle({
+                [opts.serverBundle]: path.join(Config.NODE_MODULES_DIR, serverBundleFileName)
+            }).then(() => {
+                this.fuse.context.reloadBrowserEmitter.emit({});
+            });
+            /** Add an import statement to load this bundle */
+            this.fuse.context.plugins.push(class implements Plugin {
+                public bundleEnd(context: WorkFlowContext) {
+                    context.source.addContent(`FuseBox.import("${serverBundleFileName}")`);
+                }
+            });
+        }
 
         this.fuse.context.plugins.push(
             HotReloadPlugin({ port })
