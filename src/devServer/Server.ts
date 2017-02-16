@@ -84,6 +84,9 @@ export class Server {
                     }
                 }
             });
+            this.fuse.context.reloadBrowserEmitter.on((info) => {
+                this.socketServer.send('reload', info);
+            });
 
             /**
              * watches the home directory for changes and trigger re-bundling

@@ -42,5 +42,8 @@ module.exports = {
         client.on("error", (erro) => {
             console.log(error);
         });
+        client.on("reload", () => {
+            window.location.reload();
+        });
     }
 }

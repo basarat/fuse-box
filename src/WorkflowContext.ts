@@ -52,6 +52,7 @@ export class WorkFlowContext {
     public shim: any;
 
     public sourceChangedEmitter = new EventEmitter<SourceChangedEvent>();
+    public reloadBrowserEmitter = new EventEmitter<{}>();
 
     /**
      * The default package name or the package name configured in options
